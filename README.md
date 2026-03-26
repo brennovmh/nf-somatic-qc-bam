@@ -1,4 +1,4 @@
-# qc-secundario
+# qc-secundario-somático
 
 Pipeline em Nextflow DSL2 para controle de qualidade técnico da análise secundária de NGS somático em painel alvo, integrando BAM, VCF e BED para classificar cada amostra como `LIBERAR`, `LIBERAR COM RESSALVAS` ou `NÃO LIBERAR`.
 
@@ -428,7 +428,7 @@ A heurística parte do princípio de que variantes somáticas clonais heterozig�
 
 ### Seleção das variantes usadas na estimativa
 
-A estimativa deve usar preferencialmente variantes que atendam aos critérios abaixo:
+A estimativa usa preferencialmente variantes que atendam aos critérios abaixo:
 
 - `FILTER=PASS`
 - `DP` alto, com threshold configurável
@@ -437,7 +437,7 @@ A estimativa deve usar preferencialmente variantes que atendam aos critérios ab
 - preferência por `SNVs`, evitando misturar indiscriminadamente com `INDELs`
 - exclusão de variantes com suporte técnico fraco, strand bias alto ou baixa confiabilidade
 
-Filtros práticos sugeridos para a primeira versão:
+Filtros práticos desta primeira versão:
 
 - `DP >= 200`
 - `0.05 <= VAF <= 0.45`
@@ -447,9 +447,9 @@ Filtros práticos sugeridos para a primeira versão:
 
 Esses limites devem ser tratados como parâmetros configuráveis e ajustados após validação local do laboratório.
 
-### Como a pureza seria estimada
+### Como a pureza é estimada
 
-Fluxo conceitual sugerido:
+Fluxo conceitual:
 
 1. selecionar variantes elegíveis
 2. construir a distribuição de `VAF` dessas variantes
@@ -493,17 +493,11 @@ Campos atuais na tabela:
 
 ### Interpretação recomendada
 
-A estimativa deve ser apresentada no relatório como resultado exploratório, por exemplo:
-
-- `Pureza tumoral estimada (heurística): 0.44`
-- `Confiança: MODERATE_CONFIDENCE`
-- `Método: pico dominante de VAF em variantes SNV PASS do painel`
-
 A interpretação laboratorial deve deixar claro que esse valor serve para contexto técnico e não deve ser usado isoladamente para decisão clínica ou molecular sem validação adicional.
 
 ### Limitações específicas dessa abordagem
 
-As limitações abaixo devem constar explicitamente na documentação e, idealmente, no relatório quando o módulo for ativado:
+As limitações abaixo devem constar idealmente no relatório ou outros documentos disponibilizados posteriormente quando o módulo for ativado:
 
 - a abordagem assume, de forma simplificada, variantes clonais heterozigóticas em regiões diploides
 - alterações de número de cópias, LOH e aneuploidia podem distorcer fortemente o `VAF` e enviesar a pureza estimada
@@ -532,7 +526,7 @@ Em contexto laboratorial real, o ideal é validar essa estimativa contra casos c
 - Sobreposição complexa de intervalos no BED é suportada por busca local, adequada para painéis direcionados usuais
 - O modo mínimo requer `BAM + BAI + VCF + BED`; FASTA é opcional e só é necessária para gerar dados sintéticos do `test_data`
 
-## Como expandir no futuro
+## Implementação para próxima versão
 
 - múltiplas classes de genes críticos com thresholds específicos
 - blacklist de regiões sistematicamente difíceis
