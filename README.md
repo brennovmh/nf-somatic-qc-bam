@@ -326,6 +326,7 @@ Arquivos principais por amostra:
 - `variants/<sample>.variants_nonpass.tsv`
 - `qc/<sample>.qc_flags.tsv`
 - `qc/<sample>.classification.tsv`
+- `tables/<sample>.tumor_purity_estimate.tsv`
 - `reports/<sample>.qc_report.html`
 - `reports/<sample>.qc_report.md`
 
@@ -356,6 +357,7 @@ Arquivos de coorte:
 | `vcf_summary.tsv` | `results/variants/` | Resumo global do VCF com contagens, fração PASS, DP/VAF e Ti/Tv quando aplicável | Arquivo-chave para entender a qualidade geral das chamadas de variantes |
 | `qc_flags.tsv` | `results/qc/` | Lista de flags `PASS`, `WARN` e `FAIL` disparadas pelas regras configuradas | Deve ser revisado sempre que a amostra vier com ressalva ou não liberação |
 | `classification.tsv` | `results/qc/` | Classificação final, frase conclusiva e justificativa objetiva | É o artefato mais direto para decisão operacional de liberação |
+| `tumor_purity_estimate.tsv` | `results/tables/` | Estimativa heurística de pureza tumoral, confiança, pico dominante de VAF e limitações | Use como contexto exploratório da amostra, nunca como medida isolada validada |
 | `executive_summary.md` | `results/qc/` | Resumo textual curto da amostra | Útil para registro, auditoria e anexação em documentação interna |
 | `panel_variant_status.tsv` | `results/tables/` | Relação entre genes do painel, cobertura e presença de variantes | Ajuda a responder quais genes estavam adequados e se tiveram ou não variantes observadas |
 | `qc_report.html` | `results/reports/` | Relatório principal com resumo executivo, tabelas, alertas e gráficos | É o documento mais indicado para revisão humana e discussão técnico-laboratorial |
@@ -395,7 +397,8 @@ results/
 │   ├── cohort_sample_summary.tsv
 │   ├── panel_genes.tsv
 │   ├── sample1.panel_variant_status.tsv
-│   └── sample1.sample_summary.tsv
+│   ├── sample1.sample_summary.tsv
+│   └── sample1.tumor_purity_estimate.tsv
 └── variants/
     ├── sample1.variant_gene_counts.tsv
     ├── sample1.vcf_summary.tsv
@@ -407,6 +410,120 @@ results/
 ## DAG simplificado
 
 Ver `docs/dag.txt`.
+
+## Estimativa heurística de pureza tumoral
+
+O pipeline inclui um módulo opcional de estimativa exploratória de pureza tumoral usando apenas os arquivos já disponíveis no fluxo, isto é, `BAM + VCF + BED` e as métricas derivadas desses artefatos. No estado atual do projeto, ele vem habilitado por padrão e gera uma tabela própria por amostra.
+
+### Objetivo
+
+Essa estimativa não substitui métodos dedicados de pureza/ploidia, mas pode fornecer um valor aproximado para contextualização técnica da amostra, especialmente em painéis somáticos sem normal pareado.
+
+### Estratégia proposta
+
+A heurística parte do princípio de que variantes somáticas clonais heterozigóticas em regiões diploides tendem a apresentar `VAF` proporcional à pureza tumoral. Sob essa hipótese simplificada:
+
+- `pureza tumoral aproximada ~ 2 x VAF clonal dominante`
+- exemplo: um pico clonal em `VAF ~ 0.22` sugere pureza tumoral aproximada de `44%`
+
+### Seleção das variantes usadas na estimativa
+
+A estimativa deve usar preferencialmente variantes que atendam aos critérios abaixo:
+
+- `FILTER=PASS`
+- `DP` alto, com threshold configurável
+- `VAF` em faixa plausível para variante somática clonal
+- variante localizada dentro das regiões alvo do painel
+- preferência por `SNVs`, evitando misturar indiscriminadamente com `INDELs`
+- exclusão de variantes com suporte técnico fraco, strand bias alto ou baixa confiabilidade
+
+Filtros práticos sugeridos para a primeira versão:
+
+- `DP >= 200`
+- `0.05 <= VAF <= 0.45`
+- usar apenas `SNVs PASS`
+- excluir variantes marcadas como `weak_support=true`
+- excluir variantes `outside_panel=true`
+
+Esses limites devem ser tratados como parâmetros configuráveis e ajustados após validação local do laboratório.
+
+### Como a pureza seria estimada
+
+Fluxo conceitual sugerido:
+
+1. selecionar variantes elegíveis
+2. construir a distribuição de `VAF` dessas variantes
+3. identificar um pico clonal dominante
+4. calcular `pureza_aproximada = min(1.0, 2 x VAF_pico)`
+5. classificar a confiança da estimativa
+
+Sugestão inicial de classes de confiança:
+
+- `NOT_ESTIMABLE`: poucas variantes elegíveis ou distribuição muito dispersa
+- `LOW_CONFIDENCE`: sinal fraco, poucos eventos ou pico mal definido
+- `MODERATE_CONFIDENCE`: número razoável de variantes elegíveis e pico relativamente estável
+
+### Saídas atuais do módulo
+
+A implementação atual gera:
+
+- `tables/<sample>.tumor_purity_estimate.tsv`
+- incorporação do resultado resumido em `tables/<sample>.sample_summary.tsv` e `tables/<sample>.sample_summary.csv`
+- incorporação da estimativa no `reports/<sample>.qc_report.html` e `reports/<sample>.qc_report.md`
+
+Campos atuais na tabela:
+
+- `sample_id`
+- `eligible_variants`
+- `dominant_vaf_peak`
+- `estimated_tumor_purity`
+- `confidence_class`
+- `method`
+- `assumptions`
+- `limitations`
+
+### Parâmetros relacionados
+
+- `enable_tumor_purity`
+- `tumor_purity_min_dp`
+- `tumor_purity_min_vaf`
+- `tumor_purity_max_vaf`
+- `tumor_purity_min_variants`
+- `tumor_purity_bin_width`
+
+### Interpretação recomendada
+
+A estimativa deve ser apresentada no relatório como resultado exploratório, por exemplo:
+
+- `Pureza tumoral estimada (heurística): 0.44`
+- `Confiança: MODERATE_CONFIDENCE`
+- `Método: pico dominante de VAF em variantes SNV PASS do painel`
+
+A interpretação laboratorial deve deixar claro que esse valor serve para contexto técnico e não deve ser usado isoladamente para decisão clínica ou molecular sem validação adicional.
+
+### Limitações específicas dessa abordagem
+
+As limitações abaixo devem constar explicitamente na documentação e, idealmente, no relatório quando o módulo for ativado:
+
+- a abordagem assume, de forma simplificada, variantes clonais heterozigóticas em regiões diploides
+- alterações de número de cópias, LOH e aneuploidia podem distorcer fortemente o `VAF` e enviesar a pureza estimada
+- sem amostra normal pareada, a separação entre variante somática e germinativa é imperfeita
+- painéis alvo têm cobertura genômica restrita e podem não conter variantes suficientes para uma inferência robusta
+- subclonalidade tumoral pode gerar múltiplos picos de `VAF`, dificultando a identificação do componente clonal dominante
+- `INDELs`, hotspots específicos e variantes em regiões tecnicamente difíceis podem produzir distribuições artificiais de `VAF`
+- filtros excessivamente permissivos aumentam ruído; filtros excessivamente rígidos podem deixar a amostra sem variantes elegíveis
+- o valor obtido deve ser tratado como estimativa aproximada, não como medida validada de pureza tumoral
+- a estimativa não substitui abordagens dedicadas como modelos com `CNV`, `BAF`, `tumor-normal`, `CNVkit` ou `PureCN`
+
+### Recomendação de uso
+
+A recomendação pragmática é introduzir esse módulo como funcionalidade opcional, explicitamente marcada como:
+
+- `estimativa heurística`
+- `uso exploratório`
+- `não validada para decisão isolada`
+
+Em contexto laboratorial real, o ideal é validar essa estimativa contra casos com pureza conhecida por patologia, revisão morfológica, métodos ortogonais ou ferramentas dedicadas de pureza/ploidia.
 
 ## Limitações documentadas
 
