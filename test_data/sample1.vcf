@@ -1,0 +1,14 @@
+##fileformat=VCFv4.2
+##contig=<ID=chr1,length=200>
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Read depth">
+##INFO=<ID=MQ,Number=1,Type=Float,Description="Mapping quality">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele fraction">
+##INFO=<ID=SB,Number=1,Type=Float,Description="Strand bias">
+##FILTER=<ID=LowQual,Description="Low quality">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths">
+##FORMAT=<ID=AF,Number=A,Type=Float,Description="Allele fraction">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	TUMOR
+chr1	35	.	G	A	200	PASS	DP=180;MQ=60;AF=0.12;SB=10	GT:DP:AD:AF	0/1:180:158,22:0.12
+chr1	150	.	C	T	30	LowQual	DP=22;MQ=35;AF=0.03;SB=75	GT:DP:AD:AF	0/1:22:21,1:0.03

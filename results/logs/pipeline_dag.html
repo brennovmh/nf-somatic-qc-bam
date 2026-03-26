@@ -1,0 +1,146 @@
+<!--
+  ~ Copyright 2013-2024, Seqera Labs
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<html>
+<head>
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+</head>
+<body>
+<pre class="mermaid" style="text-align: center;">
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#B6ECE2',
+      'primaryTextColor': '#160F26',
+      'primaryBorderColor': '#065647',
+      'lineColor': '#545555',
+      'clusterBkg': '#BABCBD22',
+      'clusterBorder': '#DDDEDE',
+      'fontFamily': 'arial'
+    }
+  }
+}%%
+flowchart TB
+    subgraph " "
+    v0["input_dir"]
+    v1["bed_override"]
+    v2["sample_pattern"]
+    v7["rules"]
+    v11["Channel.fromList"]
+    end
+    v3(["VALIDATE_INPUTS"])
+    subgraph " "
+    v4[" "]
+    v5[" "]
+    v10[" "]
+    v19[" "]
+    v20[" "]
+    v22[" "]
+    v23[" "]
+    v24[" "]
+    v35[" "]
+    v36[" "]
+    v48[" "]
+    v49[" "]
+    v53["reports"]
+    v57[" "]
+    v58[" "]
+    v59[" "]
+    end
+    v6(["NORMALIZE_BED"])
+    v8(["WRITE_QC_RULES"])
+    v9(["COLLECT_TOOL_VERSIONS"])
+    subgraph "SAMPLE_QC [SAMPLE_QC]"
+    v12(["SAMTOOLS_FLAGSTAT"])
+    v13(["SAMTOOLS_STATS"])
+    v16(["PARSE_BAM_METRICS"])
+    v17(["SAMTOOLS_TARGET_DEPTH"])
+    v18(["AGGREGATE_COVERAGE"])
+    v21(["PARSE_VCF"])
+    v25(["ESTIMATE_TUMOR_PURITY"])
+    v34(["BUILD_QC_DECISION"])
+    v47(["RENDER_REPORT"])
+    v14(( ))
+    v26(( ))
+    v37(( ))
+    v50(( ))
+    v51(( ))
+    v52(( ))
+    end
+    v56(["BUILD_COHORT_SUMMARY"])
+    v54(( ))
+    v55(( ))
+    v0 --> v3
+    v1 --> v3
+    v2 --> v3
+    v3 --> v5
+    v3 --> v6
+    v3 --> v4
+    v6 --> v17
+    v6 --> v18
+    v6 --> v21
+    v6 --> v26
+    v6 --> v37
+    v7 --> v8
+    v8 --> v34
+    v9 --> v10
+    v11 --> v12
+    v11 --> v13
+    v11 --> v17
+    v11 --> v21
+    v12 --> v14
+    v13 --> v14
+    v14 --> v16
+    v16 --> v26
+    v16 --> v37
+    v17 --> v18
+    v18 --> v20
+    v18 --> v19
+    v18 --> v26
+    v18 --> v37
+    v18 --> v51
+    v21 --> v25
+    v21 --> v24
+    v21 --> v23
+    v21 --> v22
+    v21 --> v26
+    v21 --> v37
+    v25 --> v26
+    v26 --> v34
+    v34 --> v36
+    v34 --> v35
+    v34 --> v37
+    v34 --> v50
+    v37 --> v47
+    v47 --> v49
+    v47 --> v48
+    v47 --> v52
+    v52 --> v53
+    v54 --> v56
+    v55 --> v56
+    v56 --> v59
+    v56 --> v58
+    v56 --> v57
+    v50 --> v54
+    v51 --> v55
+
+</pre>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, maxTextSize: Number.MAX_SAFE_INTEGER, maxEdges: Number.MAX_SAFE_INTEGER });
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+name: qc-secundario
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - plotly
+  - pysam
+  - samtools
+  - bcftools
+  - htslib
+  - bedtools
+  - mosdepth
+  - picard
+  - openjdk=17
